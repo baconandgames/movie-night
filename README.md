@@ -21,3 +21,18 @@ Static mobile-friendly page showing movies from a Google Sheet. Each movie card 
 ```bash
 touch .nojekyll
 ```
+
+Local testing notes
+-------------------
+
+You can test the site locally by placing a CSV file named `movies.csv` next to `index.html` (a sample `movies.csv` is included). The page will try to load `./movies.csv` first; if it doesn't exist it will fall back to the published Google Sheet URL used in production.
+
+Run a simple local server from the project folder and open the site in your browser:
+
+```bash
+cd /Users/sjm/Sites/movie-night
+python3 -m http.server 8000
+open http://localhost:8000/
+```
+
+When you're ready to deploy, remove or ignore `movies.csv` and the site will fetch the live sheet.

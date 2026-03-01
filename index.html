@@ -36,7 +36,10 @@
 	</main>
 
 	<script>
-		const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRqmDs0N_5ZHMIoXa6IiIrwSysl33ePjsV3hDAYo2tFLLNgyIJKXuH94ZlXbTNfuI4YWAraq01e0-J9/pub?gid=152492302&single=true&output=csv";
+		// Remote published Google Sheet (used in production)
+		const CSV_URL_REMOTE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRqmDs0N_5ZHMIoXa6IiIrwSysl33ePjsV3hDAYo2tFLLNgyIJKXuH94ZlXbTNfuI4YWAraq01e0-J9/pub?gid=152492302&single=true&output=csv";
+		// Local override for development: place a `movies.csv` file next to index.html
+		const CSV_URL_LOCAL = "./movies.csv";
 
 		function parseCSV(text) {
 			// Simple CSV parser (handles quoted commas)
@@ -112,8 +115,23 @@
 
 		async function init() {
 			document.getElementById("status").textContent = "Loading…";
-			const res = await fetch(CSV_URL, { cache: "no-store" });
-			const text = await res.text();
+			// Try local CSV first (for dev). If it returns 200, use it; otherwise fall back to the remote sheet.
+			let text;
+			try {
+				const localRes = await fetch(CSV_URL_LOCAL, { cache: "no-store" });
+				if (localRes.ok) {
+					console.log('using local CSV', CSV_URL_LOCAL);
+					text = await localRes.text();
+				}
+			} catch (e) {
+				// ignore local fetch errors
+			}
+			if (typeof text === 'undefined') {
+				const res = await fetch(CSV_URL_REMOTE, { cache: "no-store" });
+				console.log('using remote CSV', CSV_URL_REMOTE, 'status', res.status);
+				const okText = await res.text();
+				text = okText;
+			}
 			const rows = parseCSV(text);
 
 // Expect headers: Movie, Trailer URL, Rotten URL, Runtime, Genre, Year, Critics, Audience
