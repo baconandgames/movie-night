@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Movie Night</title>
+	<style>
+		body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #f6f7f9; }
+		header { padding: 16px; position: sticky; top: 0; background: #f6f7f9; border-bottom: 1px solid #e5e7eb; }
+		.container { max-width: 900px; margin: 0 auto; padding: 12px 16px 24px; }
+		.search { width: 100%; padding: 12px 14px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 16px; }
+		.grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 14px; }
+		@media (min-width: 720px) { .grid { grid-template-columns: 1fr 1fr; } }
+		.card { background: white; border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+		.title { font-weight: 700; font-size: 18px; margin: 0 0 6px; }
+		.meta { display: flex; flex-wrap: wrap; gap: 8px; color: #374151; font-size: 14px; }
+		.pill { background: #eef2ff; border: 1px solid #e0e7ff; color: #3730a3; padding: 4px 8px; border-radius: 999px; }
+		.row { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 14px; color: #111827; }
+		.score { font-weight: 700; }
+		.actions { margin-top: 12px; display: flex; gap: 10px; }
+		a.btn { flex: 1; text-align: center; text-decoration: none; padding: 10px 12px; border-radius: 10px; border: 1px solid #d1d5db; color: #111827; background: #fff; }
+		a.btn.primary { border-color: #111827; background: #111827; color: #fff; }
+		.small { color: #6b7280; font-size: 12px; margin-top: 6px; }
+	</style>
+</head>
+<body>
+	<header>
+		<div class="container">
+			<input id="q" class="search" placeholder="Search movies, genre, year…" />
+			<div class="small" id="status"></div>
+		</div>
+	</header>
+
+	<main class="container">
+		<div id="grid" class="grid"></div>
+	</main>
+
+	<script>
+		const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRqmDs0N_5ZHMIoXa6IiIrwSysl33ePjsV3hDAYo2tFLLNgyIJKXuH94ZlXbTNfuI4YWAraq01e0-J9/pub?gid=152492302&single=true&output=csv";
+
+		function parseCSV(text) {
+			// Simple CSV parser (handles quoted commas)
+			const rows = [];
+			let row = [], cell = "", inQuotes = false;
+			for (let i = 0; i < text.length; i++) {
+				const c = text[i], n = text[i + 1];
+				if (c === '"' && inQuotes && n === '"') { cell += '"'; i++; continue; }
+				if (c === '"') { inQuotes = !inQuotes; continue; }
+				if (c === ',' && !inQuotes) { row.push(cell); cell = ""; continue; }
+				if ((c === '\n' || c === '\r') && !inQuotes) {
+					if (cell.length || row.length) row.push(cell);
+					if (row.length) rows.push(row);
+					row = []; cell = "";
+					// swallow \r\n
+					if (c === '\r' && n === '\n') i++;
+					continue;
+				}
+				cell += c;
+			}
+			if (cell.length || row.length) { row.push(cell); rows.push(row); }
+			return rows;
+		}
+
+		function asMinutes(runtime) {
+			// "1h 54m" or "1h 47" etc
+			const h = runtime.match(/(\d+)\s*h/);
+			const m = runtime.match(/(\d+)\s*m/);
+			return (h ? parseInt(h[1], 10) * 60 : 0) + (m ? parseInt(m[1], 10) : 0);
+		}
+
+		function makeCard(d) {
+			const critics = d.critics?.trim() || "";
+			const audience = d.audience?.trim() || "";
+			const trailer = d.trailer?.trim() || "";
+			const trailerLink = trailer && trailer.startsWith("http") ? trailer : null;
+
+			const el = document.createElement("div");
+			el.className = "card";
+			el.innerHTML = `
+				<h2 class="title">${d.movie}</h2>
+				<div class="meta">
+					<span class="pill">${d.genre}</span>
+					<span>${d.runtime}</span>
+					<span>${d.year}</span>
+				</div>
+				<div class="row">
+					<div>Critics: <span class="score">${critics}</span></div>
+					<div>Audience: <span class="score">${audience}</span></div>
+				</div>
+				<div class="actions">
+					${trailerLink ? `<a class="btn primary" href="${trailerLink}" target="_blank" rel="noopener">Trailer</a>` : `<span class="small">No trailer link</span>`}
+				</div>
+			`;
+			return el;
+		}
+
+		let data = [];
+
+		function render(filter = "") {
+			const grid = document.getElementById("grid");
+			grid.innerHTML = "";
+
+			const q = filter.trim().toLowerCase();
+			const filtered = q
+				? data.filter(d =>
+					[d.movie, d.genre, d.year].some(v => (v || "").toLowerCase().includes(q))
+				)
+				: data;
+
+			for (const d of filtered) grid.appendChild(makeCard(d));
+			document.getElementById("status").textContent = `${filtered.length} movies`;
+		}
+
+		async function init() {
+			document.getElementById("status").textContent = "Loading…";
+			const res = await fetch(CSV_URL, { cache: "no-store" });
+			const text = await res.text();
+			const rows = parseCSV(text);
+
+			// Expect headers: Movie, Trailer, Runtime, Genre, Year, Critics, Audience
+			const headers = rows[0].map(h => h.trim().toLowerCase());
+			const idx = (name) => headers.indexOf(name.toLowerCase());
+
+			data = rows.slice(1)
+				.filter(r => r.length && r.some(x => (x || "").trim()))
+				.map(r => ({
+					movie: r[idx("movie")] || "",
+					trailer: r[idx("trailer")] || "",
+					runtime: r[idx("runtime")] || "",
+					genre: r[idx("genre")] || "",
+					year: r[idx("year")] || "",
+					critics: r[idx("critics")] || "",
+					audience: r[idx("audience")] || "",
+				}))
+				// Optional: sort by year desc, then critics desc
+				.sort((a, b) => (parseInt(b.year||0)-parseInt(a.year||0)) || ((b.critics||"").localeCompare(a.critics||"")));
+
+			render();
+
+			document.getElementById("q").addEventListener("input", (e) => render(e.target.value));
+		}
+
+		init().catch(err => {
+			document.getElementById("status").textContent = "Failed to load sheet.";
+			console.error(err);
+		});
+	</script>
+</body>
+</html>
