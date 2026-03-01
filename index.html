@@ -134,15 +134,19 @@
 			.map(r => ({
 				movie: pick(r, "movie", "title"),
 				trailer: pick(r, "trailer", "trailer url"),
-				rotten: pick(r, "rotten", "rotten url", "rt url"),
+				// spreadsheet now uses "Rotten Tomatoes URL" exactly
+				rotten: pick(r, "rotten", "rotten url", "rt url", "rotten tomatoes url"),
 				runtime: pick(r, "runtime"),
 				genre: pick(r, "genre"),
 				year: pick(r, "year"),
 				critics: pick(r, "critics"),
 				audience: pick(r, "audience"),
-				}))
-				// Optional: sort by year desc, then critics desc
-				.sort((a, b) => (parseInt(b.year||0)-parseInt(a.year||0)) || ((b.critics||"").localeCompare(a.critics||"")));
+			}))
+			// Optional: sort by year desc, then critics desc
+			.sort((a, b) => (parseInt(b.year||0)-parseInt(a.year||0)) || ((b.critics||"").localeCompare(a.critics||"")));
+
+			// debug: log how many entries we loaded
+			console.log("loaded movies", data.length, data[0]);
 
 			render();
 
