@@ -132,7 +132,7 @@
 		data = rows.slice(1)
 			.filter(r => r.length && r.some(x => (x || "").trim()))
 			.map(r => ({
-				movie: pick(r, "movie"),
+				movie: pick(r, "movie", "title"),
 				trailer: pick(r, "trailer", "trailer url"),
 				rotten: pick(r, "rotten", "rotten url", "rt url"),
 				runtime: pick(r, "runtime"),
