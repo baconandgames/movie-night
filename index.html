@@ -73,27 +73,26 @@
 			const audience = d.audience?.trim() || "";
 			const trailer = d.trailer?.trim() || "";
 			const trailerLink = trailer && trailer.startsWith("http") ? trailer : null;
+			const rotten = d.rotten?.trim() || "";
+			const rottenLink = rotten && rotten.startsWith("http") ? rotten : null;
 
 			const el = document.createElement("div");
 			el.className = "card";
 			el.innerHTML = `
-				<h2 class="title">${d.movie}</h2>
-				<div class="meta">
-					<span class="pill">${d.genre}</span>
-					<span>${d.runtime}</span>
-					<span>${d.year}</span>
-				</div>
-				<div class="row">
-					<div>Critics: <span class="score">${critics}</span></div>
-					<div>Audience: <span class="score">${audience}</span></div>
-				</div>
-				<div class="actions">
-					${trailerLink ? `<a class="btn primary" href="${trailerLink}" target="_blank" rel="noopener">Trailer</a>` : `<span class="small">No trailer link</span>`}
-				</div>
-			`;
-			return el;
-		}
-
+					<h2 class="title">${d.movie}</h2>
+					<div class="meta">
+						<span class="pill">${d.genre}</span>
+						<span>${d.runtime}</span>
+						<span>${d.year}</span>
+					</div>
+					<div class="row">
+						<div>Critics: <span class="score">${critics}</span></div>
+						<div>Audience: <span class="score">${audience}</span></div>
+					</div>
+					<div class="actions">
+						${trailerLink ? `<a class="btn primary" href="${trailerLink}" target="_blank" rel="noopener">Trailer</a>` : ""}
+						${rottenLink ? `<a class="btn" href="${rottenLink}" target="_blank" rel="noopener">Rotten&nbsp;Tomatoes</a>` : ""}
+						${!trailerLink && !rottenLink ? `<span class="small">No links</span>` : ""}
 		let data = [];
 
 		function render(filter = "") {
@@ -117,20 +116,30 @@
 			const text = await res.text();
 			const rows = parseCSV(text);
 
-			// Expect headers: Movie, Trailer, Runtime, Genre, Year, Critics, Audience
-			const headers = rows[0].map(h => h.trim().toLowerCase());
-			const idx = (name) => headers.indexOf(name.toLowerCase());
+// Expect headers: Movie, Trailer URL, Rotten URL, Runtime, Genre, Year, Critics, Audience
+		const headers = rows[0].map(h => h.trim().toLowerCase());
+		const idx = (name) => headers.indexOf(name.toLowerCase());
 
-			data = rows.slice(1)
-				.filter(r => r.length && r.some(x => (x || "").trim()))
-				.map(r => ({
-					movie: r[idx("movie")] || "",
-					trailer: r[idx("trailer")] || "",
-					runtime: r[idx("runtime")] || "",
-					genre: r[idx("genre")] || "",
-					year: r[idx("year")] || "",
-					critics: r[idx("critics")] || "",
-					audience: r[idx("audience")] || "",
+		// helper to look up a value from one or more possible header names
+		const pick = (r, ...names) => {
+			for (const n of names) {
+				const i = idx(n);
+				if (i !== -1 && r[i]) return r[i];
+			}
+			return "";
+		};
+
+		data = rows.slice(1)
+			.filter(r => r.length && r.some(x => (x || "").trim()))
+			.map(r => ({
+				movie: pick(r, "movie"),
+				trailer: pick(r, "trailer", "trailer url"),
+				rotten: pick(r, "rotten", "rotten url", "rt url"),
+				runtime: pick(r, "runtime"),
+				genre: pick(r, "genre"),
+				year: pick(r, "year"),
+				critics: pick(r, "critics"),
+				audience: pick(r, "audience"),
 				}))
 				// Optional: sort by year desc, then critics desc
 				.sort((a, b) => (parseInt(b.year||0)-parseInt(a.year||0)) || ((b.critics||"").localeCompare(a.critics||"")));

@@ -1,6 +1,6 @@
 # Movie Night
 
-Static mobile-friendly page showing movies from a Google Sheet.
+Static mobile-friendly page showing movies from a Google Sheet. Each movie card can now include links to a trailer and the corresponding Rotten Tomatoes page.
 
 ## Deploying to GitHub Pages
 
