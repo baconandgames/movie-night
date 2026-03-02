@@ -409,7 +409,7 @@
 
 	<main class="shell">
 		<section id="grid" class="grid" aria-live="polite"></section>
-		<div class="version">v0.2.5</div>
+		<div class="version">v0.3.1</div>
 	</main>
 
 	<script>
@@ -417,6 +417,36 @@
 		const CSV_URL_LOCAL = "./movies.csv";
 		const RT_LOGO = "./images/rt-logo.png";
 		const YT_LOGO = "./images/yt-logo.png";
+		const KNOWN_GENRES = [
+			"Mystery & Thriller",
+			"Kids & Family",
+			"War & History",
+			"Drama Fantasy",
+			"Sci-Fi",
+			"Action",
+			"Adventure",
+			"Animation",
+			"Biography",
+			"Comedy",
+			"Crime",
+			"Documentary",
+			"Drama",
+			"Family",
+			"Fantasy",
+			"History",
+			"Horror",
+			"Music",
+			"Musical",
+			"Mystery",
+			"Romance",
+			"Romcom",
+			"Sports",
+			"Thriller",
+			"TV Movie",
+			"War",
+			"Western",
+			"Whodunnit"
+		];
 
 		let data = [];
 		const activeFilters = {
@@ -537,7 +567,28 @@
 		}
 
 		function extractGenreTokens(value) {
-			return String(value || "")
+			const source = String(value || "").trim();
+			if (!source) {
+				return [];
+			}
+
+			const matches = [];
+			for (const genre of KNOWN_GENRES) {
+				const pattern = genre
+					.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+					.replace(/\s*&\s*/g, "\\s*&\\s*")
+					.replace(/\s+/g, "\\s+");
+				const regex = new RegExp(`(^|[^A-Za-z])(${pattern})(?=$|[^A-Za-z])`, "ig");
+				if (regex.test(source)) {
+					matches.push(genre);
+				}
+			}
+
+			if (matches.length) {
+				return matches;
+			}
+
+			return source
 				.split(/[|/,]/)
 				.map((part) => part.trim())
 				.filter(Boolean);
