@@ -5,175 +5,584 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<title>Movie Night</title>
 	<style>
-		body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #f6f7f9; }
-		header { padding: 16px; position: sticky; top: 0; background: #f6f7f9; border-bottom: 1px solid #e5e7eb; }
-		.container { max-width: 900px; margin: 0 auto; padding: 12px 16px 24px; }
-		.search { width: 100%; padding: 12px 14px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 16px; }
-		.grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 14px; }
-		@media (min-width: 720px) { .grid { grid-template-columns: 1fr 1fr; } }
-		.card { background: white; border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
-		.title { font-weight: 700; font-size: 18px; margin: 0 0 6px; }
-		.meta { display: flex; flex-wrap: wrap; gap: 8px; color: #374151; font-size: 14px; }
-		.pill { background: #eef2ff; border: 1px solid #e0e7ff; color: #3730a3; padding: 4px 8px; border-radius: 999px; }
-		.row { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 14px; color: #111827; }
-		.score { font-weight: 700; }
-		.actions { margin-top: 12px; display: flex; gap: 10px; }
-		a.btn { flex: 1; text-align: center; text-decoration: none; padding: 10px 12px; border-radius: 10px; border: 1px solid #d1d5db; color: #111827; background: #fff; }
-		a.btn.primary { border-color: #111827; background: #111827; color: #fff; }
-		.small { color: #6b7280; font-size: 12px; margin-top: 6px; }
+		:root {
+			--page-bg: #efe6d4;
+			--panel-bg: #f7f0e3;
+			--card-bg: #fffaf0;
+			--card-border: #231f1a;
+			--muted: #6f6559;
+			--text: #1b1712;
+			--accent: #c83a1b;
+			--accent-soft: #f2d2b4;
+			--shadow: 0 18px 45px rgba(43, 31, 19, 0.12);
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+			background:
+				radial-gradient(circle at top left, rgba(200, 58, 27, 0.16), transparent 28%),
+				linear-gradient(180deg, #f3eadb 0%, var(--page-bg) 100%);
+			color: var(--text);
+			font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+		}
+
+		.shell {
+			max-width: 1100px;
+			margin: 0 auto;
+			padding: 24px 16px 48px;
+		}
+
+		.topbar {
+			position: sticky;
+			top: 0;
+			z-index: 10;
+			backdrop-filter: blur(10px);
+			background: rgba(243, 234, 219, 0.88);
+			border-bottom: 1px solid rgba(35, 31, 26, 0.1);
+		}
+
+		.topbar-inner {
+			max-width: 1100px;
+			margin: 0 auto;
+			padding: 18px 16px 16px;
+		}
+
+		.heading {
+			display: flex;
+			align-items: end;
+			justify-content: space-between;
+			gap: 16px;
+			margin-bottom: 14px;
+		}
+
+		.heading h1 {
+			margin: 0;
+			font-family: Georgia, "Times New Roman", serif;
+			font-size: clamp(2rem, 4vw, 3.4rem);
+			font-weight: 700;
+			line-height: 0.95;
+			letter-spacing: -0.03em;
+		}
+
+		.heading p,
+		.status {
+			margin: 0;
+			color: var(--muted);
+			font-size: 0.95rem;
+		}
+
+		.search-wrap {
+			position: relative;
+		}
+
+		.search {
+			width: 100%;
+			border: 1.5px solid rgba(35, 31, 26, 0.18);
+			border-radius: 20px;
+			padding: 16px 18px;
+			background: rgba(255, 250, 240, 0.96);
+			color: var(--text);
+			font-size: 1rem;
+			box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+		}
+
+		.search:focus {
+			outline: 2px solid rgba(200, 58, 27, 0.2);
+			border-color: rgba(200, 58, 27, 0.45);
+		}
+
+		.grid {
+			display: grid;
+			grid-template-columns: 1fr;
+			gap: 18px;
+			padding-top: 8px;
+		}
+
+		.card {
+			display: grid;
+			grid-template-columns: 116px minmax(0, 1fr);
+			gap: 16px;
+			padding: 14px;
+			border: 2px solid var(--card-border);
+			border-radius: 28px;
+			background: var(--card-bg);
+			box-shadow: var(--shadow);
+			overflow: hidden;
+		}
+
+		.poster {
+			width: 100%;
+			aspect-ratio: 2 / 3;
+			border-radius: 20px;
+			overflow: hidden;
+			background: linear-gradient(180deg, #d8ccbc 0%, #b7a48c 100%);
+			border: 2px solid rgba(35, 31, 26, 0.12);
+		}
+
+		.poster img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			display: block;
+		}
+
+		.poster-fallback {
+			width: 100%;
+			height: 100%;
+			display: grid;
+			place-items: center;
+			padding: 12px;
+			text-align: center;
+			font-family: Georgia, "Times New Roman", serif;
+			font-weight: 700;
+			font-size: 1rem;
+			line-height: 1.1;
+			color: rgba(27, 23, 18, 0.7);
+		}
+
+		.content {
+			min-width: 0;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.title-row {
+			display: flex;
+			align-items: baseline;
+			gap: 8px;
+			flex-wrap: wrap;
+		}
+
+		.title {
+			margin: 0;
+			font-family: Georgia, "Times New Roman", serif;
+			font-size: clamp(1.4rem, 2.8vw, 2rem);
+			line-height: 1;
+			letter-spacing: -0.03em;
+		}
+
+		.year {
+			font-size: 1.05rem;
+			font-weight: 700;
+			color: var(--muted);
+		}
+
+		.genre,
+		.runtime {
+			margin-top: 6px;
+			color: var(--muted);
+			font-size: 0.98rem;
+		}
+
+		.scoreboard {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 10px;
+			margin-top: 18px;
+		}
+
+		.score-block {
+			background: linear-gradient(180deg, rgba(242, 210, 180, 0.5), rgba(255, 250, 240, 0.8));
+			border: 1.5px solid rgba(35, 31, 26, 0.1);
+			border-radius: 18px;
+			padding: 12px 14px;
+			min-height: 92px;
+		}
+
+		.score-label {
+			display: block;
+			font-size: 0.78rem;
+			font-weight: 800;
+			letter-spacing: 0.16em;
+			text-transform: uppercase;
+			color: var(--muted);
+		}
+
+		.score-value {
+			display: block;
+			margin-top: 6px;
+			font-size: clamp(2rem, 6vw, 3rem);
+			line-height: 1;
+			font-weight: 800;
+			letter-spacing: -0.05em;
+		}
+
+		.synopsis {
+			margin-top: 14px;
+			color: #332c24;
+			font-size: 0.95rem;
+			line-height: 1.45;
+			display: -webkit-box;
+			-webkit-line-clamp: 4;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+
+		.links {
+			margin-top: auto;
+			display: flex;
+			justify-content: flex-end;
+			gap: 10px;
+			padding-top: 16px;
+		}
+
+		.logo-link {
+			width: 48px;
+			height: 48px;
+			border-radius: 999px;
+			border: 2px solid rgba(35, 31, 26, 0.14);
+			background: rgba(255, 255, 255, 0.9);
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			box-shadow: 0 8px 20px rgba(43, 31, 19, 0.1);
+			transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+		}
+
+		.logo-link:hover,
+		.logo-link:focus-visible {
+			transform: translateY(-1px);
+			box-shadow: 0 12px 24px rgba(43, 31, 19, 0.16);
+			border-color: rgba(200, 58, 27, 0.35);
+			outline: none;
+		}
+
+		.logo-link img {
+			width: 24px;
+			height: 24px;
+			object-fit: contain;
+			display: block;
+		}
+
+		.empty {
+			padding: 28px;
+			border: 2px dashed rgba(35, 31, 26, 0.2);
+			border-radius: 24px;
+			text-align: center;
+			color: var(--muted);
+			background: rgba(255, 250, 240, 0.65);
+		}
+
+		@media (min-width: 860px) {
+			.grid {
+				grid-template-columns: 1fr 1fr;
+			}
+		}
+
+		@media (max-width: 639px) {
+			.heading {
+				align-items: start;
+				flex-direction: column;
+			}
+
+			.card {
+				grid-template-columns: 96px minmax(0, 1fr);
+				border-radius: 24px;
+				padding: 12px;
+				gap: 12px;
+			}
+
+			.scoreboard {
+				gap: 8px;
+			}
+
+			.score-block {
+				padding: 10px 12px;
+				min-height: 84px;
+			}
+
+			.links {
+				padding-top: 12px;
+			}
+		}
 	</style>
 </head>
 <body>
-	<header>
-		<div class="container">
-			<input id="q" class="search" placeholder="Search movies, genre, year…" />
-			<div class="small" id="status"></div>
+	<header class="topbar">
+		<div class="topbar-inner">
+			<div class="heading">
+				<div>
+					<h1>Movie Night</h1>
+					<p>Search by title, genre, year, runtime, or synopsis.</p>
+				</div>
+				<p class="status" id="status">Loading movies…</p>
+			</div>
+			<div class="search-wrap">
+				<input id="q" class="search" type="search" placeholder="Search movies, genre, year…" autocomplete="off" />
+			</div>
 		</div>
 	</header>
 
-	<main class="container">
-		<div id="grid" class="grid"></div>
+	<main class="shell">
+		<section id="grid" class="grid" aria-live="polite"></section>
 	</main>
 
 	<script>
-		// Remote published Google Sheet (used in production)
 		const CSV_URL_REMOTE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRqmDs0N_5ZHMIoXa6IiIrwSysl33ePjsV3hDAYo2tFLLNgyIJKXuH94ZlXbTNfuI4YWAraq01e0-J9/pub?gid=152492302&single=true&output=csv";
-		// Local override for development: place a `movies.csv` file next to index.html
 		const CSV_URL_LOCAL = "./movies.csv";
+		const RT_LOGO = "./images/rt-logo.png";
+		const YT_LOGO = "./images/yt-logo.png";
+
+		let data = [];
 
 		function parseCSV(text) {
-			// Simple CSV parser (handles quoted commas)
 			const rows = [];
-			let row = [], cell = "", inQuotes = false;
-			for (let i = 0; i < text.length; i++) {
-				const c = text[i], n = text[i + 1];
-				if (c === '"' && inQuotes && n === '"') { cell += '"'; i++; continue; }
-				if (c === '"') { inQuotes = !inQuotes; continue; }
-				if (c === ',' && !inQuotes) { row.push(cell); cell = ""; continue; }
-				if ((c === '\n' || c === '\r') && !inQuotes) {
-					if (cell.length || row.length) row.push(cell);
-					if (row.length) rows.push(row);
-					row = []; cell = "";
-					// swallow \r\n
-					if (c === '\r' && n === '\n') i++;
+			let row = [];
+			let cell = "";
+			let inQuotes = false;
+
+			for (let i = 0; i < text.length; i += 1) {
+				const c = text[i];
+				const n = text[i + 1];
+
+				if (c === '"' && inQuotes && n === '"') {
+					cell += '"';
+					i += 1;
 					continue;
 				}
+
+				if (c === '"') {
+					inQuotes = !inQuotes;
+					continue;
+				}
+
+				if (c === "," && !inQuotes) {
+					row.push(cell);
+					cell = "";
+					continue;
+				}
+
+				if ((c === "\n" || c === "\r") && !inQuotes) {
+					if (cell.length || row.length) {
+						row.push(cell);
+					}
+					if (row.length) {
+						rows.push(row);
+					}
+					row = [];
+					cell = "";
+					if (c === "\r" && n === "\n") {
+						i += 1;
+					}
+					continue;
+				}
+
 				cell += c;
 			}
-			if (cell.length || row.length) { row.push(cell); rows.push(row); }
+
+			if (cell.length || row.length) {
+				row.push(cell);
+				rows.push(row);
+			}
+
 			return rows;
 		}
 
-		function asMinutes(runtime) {
-			// "1h 54m" or "1h 47" etc
-			const h = runtime.match(/(\d+)\s*h/);
-			const m = runtime.match(/(\d+)\s*m/);
-			return (h ? parseInt(h[1], 10) * 60 : 0) + (m ? parseInt(m[1], 10) : 0);
+		function escapeHtml(value) {
+			return String(value || "")
+				.replaceAll("&", "&amp;")
+				.replaceAll("<", "&lt;")
+				.replaceAll(">", "&gt;")
+				.replaceAll('"', "&quot;")
+				.replaceAll("'", "&#39;");
 		}
 
-		function makeCard(d) {
-			const critics = d.critics?.trim() || "";
-			const audience = d.audience?.trim() || "";
-			const trailer = d.trailer?.trim() || "";
-			const trailerLink = trailer && trailer.startsWith("http") ? trailer : null;
-			const rotten = d.rotten?.trim() || "";
-			const rottenLink = rotten && rotten.startsWith("http") ? rotten : null;
+		function normalizeHeader(value) {
+			return String(value || "").trim().toLowerCase();
+		}
 
-			const el = document.createElement("div");
+		function buildRowObject(headers, row) {
+			function pick(...names) {
+				for (const name of names) {
+					const index = headers.indexOf(normalizeHeader(name));
+					if (index !== -1 && row[index]) {
+						return String(row[index]).trim();
+					}
+				}
+				return "";
+			}
+
+			return {
+				title: pick("title", "movie"),
+				rotten: pick("rotten tomatoes url", "rotten url", "rotten", "rt url"),
+				trailer: pick("trailer url", "trailer"),
+				runtime: pick("runtime"),
+				genre: pick("genre"),
+				year: pick("year"),
+				critics: pick("critics"),
+				audience: pick("audience"),
+				synopsis: pick("synopsis", "description"),
+				poster: pick("poster url", "poster")
+			};
+		}
+
+		function validHttpUrl(value) {
+			return /^https?:\/\//i.test(String(value || "").trim());
+		}
+
+		function scoreText(value) {
+			const text = String(value || "").trim();
+			return text || "--";
+		}
+
+		function sortMovies(a, b) {
+			const yearDiff = Number(b.year || 0) - Number(a.year || 0);
+			if (yearDiff !== 0) {
+				return yearDiff;
+			}
+			return a.title.localeCompare(b.title);
+		}
+
+		function makePoster(movie) {
+			if (validHttpUrl(movie.poster)) {
+				return `
+					<div class="poster">
+						<img src="${escapeHtml(movie.poster)}" alt="${escapeHtml(movie.title)} poster" loading="lazy" referrerpolicy="no-referrer" />
+					</div>
+				`;
+			}
+
+			return `
+				<div class="poster">
+					<div class="poster-fallback">${escapeHtml(movie.title)}</div>
+				</div>
+			`;
+		}
+
+		function makeLinks(movie) {
+			const links = [];
+
+			if (validHttpUrl(movie.rotten)) {
+				links.push(`
+					<a class="logo-link" href="${escapeHtml(movie.rotten)}" target="_blank" rel="noopener" aria-label="Open Rotten Tomatoes page for ${escapeHtml(movie.title)}">
+						<img src="${RT_LOGO}" alt="Rotten Tomatoes" />
+					</a>
+				`);
+			}
+
+			if (validHttpUrl(movie.trailer)) {
+				links.push(`
+					<a class="logo-link" href="${escapeHtml(movie.trailer)}" target="_blank" rel="noopener" aria-label="Open trailer for ${escapeHtml(movie.title)}">
+						<img src="${YT_LOGO}" alt="YouTube" />
+					</a>
+				`);
+			}
+
+			return links.join("");
+		}
+
+		function makeCard(movie) {
+			const el = document.createElement("article");
 			el.className = "card";
+
+			const year = movie.year ? `<span class="year">(${escapeHtml(movie.year)})</span>` : "";
+			const runtime = movie.runtime ? `<div class="runtime">${escapeHtml(movie.runtime)}</div>` : "";
+			const genre = movie.genre ? `<div class="genre">${escapeHtml(movie.genre)}</div>` : "";
+			const synopsis = movie.synopsis ? `<div class="synopsis">${escapeHtml(movie.synopsis)}</div>` : "";
+			const links = makeLinks(movie);
+
 			el.innerHTML = `
-					<h2 class="title">${d.movie}</h2>
-					<div class="meta">
-						<span class="pill">${d.genre}</span>
-						<span>${d.runtime}</span>
-						<span>${d.year}</span>
+				${makePoster(movie)}
+				<div class="content">
+					<div class="title-row">
+						<h2 class="title">${escapeHtml(movie.title)}</h2>
+						${year}
 					</div>
-					<div class="row">
-						<div>Critics: <span class="score">${critics}</span></div>
-						<div>Audience: <span class="score">${audience}</span></div>
+					${genre}
+					${runtime}
+					<div class="scoreboard">
+						<div class="score-block">
+							<span class="score-label">Critics</span>
+							<span class="score-value">${escapeHtml(scoreText(movie.critics))}</span>
+						</div>
+						<div class="score-block">
+							<span class="score-label">Audience</span>
+							<span class="score-value">${escapeHtml(scoreText(movie.audience))}</span>
+						</div>
 					</div>
-					<div class="actions">
-						${trailerLink ? `<a class="btn primary" href="${trailerLink}" target="_blank" rel="noopener">Trailer</a>` : ""}
-						${rottenLink ? `<a class="btn" href="${rottenLink}" target="_blank" rel="noopener">Rotten&nbsp;Tomatoes</a>` : ""}
-						${!trailerLink && !rottenLink ? `<span class="small">No links</span>` : ""}
-		let data = [];
+					${synopsis}
+					<div class="links">${links}</div>
+				</div>
+			`;
+
+			return el;
+		}
 
 		function render(filter = "") {
 			const grid = document.getElementById("grid");
-			grid.innerHTML = "";
-
-			const q = filter.trim().toLowerCase();
-			const filtered = q
-				? data.filter(d =>
-					[d.movie, d.genre, d.year].some(v => (v || "").toLowerCase().includes(q))
+			const query = String(filter || "").trim().toLowerCase();
+			const filtered = query
+				? data.filter((movie) =>
+					[
+						movie.title,
+						movie.genre,
+						movie.year,
+						movie.runtime,
+						movie.synopsis
+					].some((value) => String(value || "").toLowerCase().includes(query))
 				)
 				: data;
 
-			for (const d of filtered) grid.appendChild(makeCard(d));
-			document.getElementById("status").textContent = `${filtered.length} movies`;
+			grid.innerHTML = "";
+
+			if (!filtered.length) {
+				grid.innerHTML = `<div class="empty">No movies matched that search.</div>`;
+			} else {
+				for (const movie of filtered) {
+					grid.appendChild(makeCard(movie));
+				}
+			}
+
+			document.getElementById("status").textContent = `${filtered.length} movie${filtered.length === 1 ? "" : "s"}`;
+		}
+
+		async function loadCsvText() {
+			try {
+				const localResponse = await fetch(CSV_URL_LOCAL, { cache: "no-store" });
+				if (localResponse.ok) {
+					return await localResponse.text();
+				}
+			} catch (_error) {
+				// Ignore local file failures and fall back to the published sheet.
+			}
+
+			const remoteResponse = await fetch(CSV_URL_REMOTE, { cache: "no-store" });
+			if (!remoteResponse.ok) {
+				throw new Error(`CSV fetch failed with status ${remoteResponse.status}`);
+			}
+			return await remoteResponse.text();
 		}
 
 		async function init() {
-			document.getElementById("status").textContent = "Loading…";
-			// Try local CSV first (for dev). If it returns 200, use it; otherwise fall back to the remote sheet.
-			let text;
-			try {
-				const localRes = await fetch(CSV_URL_LOCAL, { cache: "no-store" });
-				if (localRes.ok) {
-					console.log('using local CSV', CSV_URL_LOCAL);
-					text = await localRes.text();
-				}
-			} catch (e) {
-				// ignore local fetch errors
-			}
-			if (typeof text === 'undefined') {
-				const res = await fetch(CSV_URL_REMOTE, { cache: "no-store" });
-				console.log('using remote CSV', CSV_URL_REMOTE, 'status', res.status);
-				const okText = await res.text();
-				text = okText;
-			}
+			const text = await loadCsvText();
 			const rows = parseCSV(text);
-
-// Expect headers: Movie, Trailer URL, Rotten URL, Runtime, Genre, Year, Critics, Audience
-		const headers = rows[0].map(h => h.trim().toLowerCase());
-		const idx = (name) => headers.indexOf(name.toLowerCase());
-
-		// helper to look up a value from one or more possible header names
-		const pick = (r, ...names) => {
-			for (const n of names) {
-				const i = idx(n);
-				if (i !== -1 && r[i]) return r[i];
+			if (!rows.length) {
+				throw new Error("CSV did not contain any rows.");
 			}
-			return "";
-		};
 
-		data = rows.slice(1)
-			.filter(r => r.length && r.some(x => (x || "").trim()))
-			.map(r => ({
-				movie: pick(r, "movie", "title"),
-				trailer: pick(r, "trailer", "trailer url"),
-				// spreadsheet now uses "Rotten Tomatoes URL" exactly
-				rotten: pick(r, "rotten", "rotten url", "rt url", "rotten tomatoes url"),
-				runtime: pick(r, "runtime"),
-				genre: pick(r, "genre"),
-				year: pick(r, "year"),
-				critics: pick(r, "critics"),
-				audience: pick(r, "audience"),
-			}))
-			// Optional: sort by year desc, then critics desc
-			.sort((a, b) => (parseInt(b.year||0)-parseInt(a.year||0)) || ((b.critics||"").localeCompare(a.critics||"")));
-
-			// debug: log how many entries we loaded
-			console.log("loaded movies", data.length, data[0]);
+			const headers = rows[0].map(normalizeHeader);
+			data = rows
+				.slice(1)
+				.filter((row) => row.some((value) => String(value || "").trim()))
+				.map((row) => buildRowObject(headers, row))
+				.filter((movie) => movie.title)
+				.sort(sortMovies);
 
 			render();
 
-			document.getElementById("q").addEventListener("input", (e) => render(e.target.value));
+			document.getElementById("q").addEventListener("input", (event) => {
+				render(event.target.value);
+			});
 		}
 
-		init().catch(err => {
-			document.getElementById("status").textContent = "Failed to load sheet.";
-			console.error(err);
+		init().catch((error) => {
+			console.error(error);
+			document.getElementById("status").textContent = "Failed to load movies";
+			document.getElementById("grid").innerHTML = `<div class="empty">The movie list could not be loaded.</div>`;
 		});
 	</script>
 </body>
