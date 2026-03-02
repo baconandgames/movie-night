@@ -1,33 +1,45 @@
 # Movie Night
 
-Static mobile-friendly page showing movies from a Google Sheet. Each movie card can now include links to a trailer and the corresponding Rotten Tomatoes page.
+Small static microsite for browsing a movie list published from Google Sheets.
 
-## Deploying to GitHub Pages
+## Current Setup
 
-1. Create a new repository on GitHub (e.g. `movie-night`).
-1. In your local folder:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git remote add origin git@github.com:baconandgames/movie-night.git
-   git branch -M main
-   git push -u origin main
-   ```
-2. In the repository Settings > Pages, set the source to **main branch** and root (not `/docs`).
-3. Save; GitHub will publish at `https://<your-username>.github.io/movie-night/`.
+- App entrypoint: `index.html`
+- Static assets: `images/`
+- Data source: published Google Sheets CSV
+- Production site: `https://baconandgames.github.io/movie-night/`
 
-(Optional) Add a `.nojekyll` file if you want to disable Jekyll processing:
-```bash
-touch .nojekyll
-```
+The page renders mobile-friendly movie cards with:
 
-Local testing notes
--------------------
+- poster
+- title and year
+- genre and runtime
+- critics and audience scores
+- expandable synopsis
+- Rotten Tomatoes and trailer links
+- text search
+- year and genre filter chips
 
-You can test the site locally by placing a CSV file named `movies.csv` next to `index.html` (a sample `movies.csv` is included). The page will try to load `./movies.csv` first; if it doesn't exist it will fall back to the published Google Sheet URL used in production.
+## Data Shape
 
-Run a simple local server from the project folder and open the site in your browser:
+The site expects the sheet/CSV in this order:
+
+1. `Title`
+2. `Rotten Tomatoes URL`
+3. `Trailer URL`
+4. `Runtime`
+5. `Genre`
+6. `Year`
+7. `Critics`
+8. `Audience`
+9. `Synopsis`
+10. `Poster URL`
+
+The parser prefers matching by header name, but also falls back to these column positions.
+
+## Local Testing
+
+For local testing, place a `movies.csv` file next to `index.html`. If `movies.csv` is not present, the page falls back to the published Google Sheets CSV.
 
 ```bash
 cd /Users/sjm/Sites/movie-night
@@ -35,4 +47,10 @@ python3 -m http.server 8000
 open http://localhost:8000/
 ```
 
-When you're ready to deploy, remove or ignore `movies.csv` and the site will fetch the live sheet.
+## Deployment
+
+This repo is deployed with GitHub Pages from `main` at the repository root.
+
+## Version Note
+
+The footer version on the page is the easiest way to confirm whether GitHub Pages has picked up the latest deploy.
