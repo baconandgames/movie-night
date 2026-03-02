@@ -116,7 +116,7 @@
 			gap: 14px;
 			padding: 12px;
 			border: 1px solid var(--card-border);
-			border-radius: 24px;
+			border-radius: 12px;
 			background: var(--card-bg);
 			box-shadow: var(--shadow);
 			overflow: hidden;
@@ -135,7 +135,7 @@
 		.poster {
 			width: 100%;
 			aspect-ratio: 2 / 3;
-			border-radius: 18px;
+			border-radius: 10px;
 			overflow: hidden;
 			background: linear-gradient(180deg, rgba(220, 231, 240, 0.9) 0%, rgba(197, 211, 224, 0.95) 100%);
 			border: 1px solid rgba(12, 25, 44, 0.06);
@@ -190,8 +190,7 @@
 			color: var(--muted);
 		}
 
-		.genre,
-		.runtime {
+		.meta-line {
 			margin-top: 4px;
 			color: var(--muted);
 			font-size: 0.82rem;
@@ -208,7 +207,7 @@
 		.score-block {
 			background: linear-gradient(180deg, rgba(14, 209, 170, 0.05), rgba(255, 255, 255, 0.75));
 			border: 1px solid rgba(12, 25, 44, 0.05);
-			border-radius: 16px;
+			border-radius: 8px;
 			padding: 10px 12px;
 			min-height: 68px;
 			box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
@@ -282,7 +281,7 @@
 		.empty {
 			padding: 28px;
 			border: 1px dashed rgba(12, 25, 44, 0.12);
-			border-radius: 24px;
+			border-radius: 12px;
 			text-align: center;
 			color: var(--muted);
 			background: rgba(255, 255, 255, 0.72);
@@ -302,7 +301,7 @@
 
 			.card {
 				grid-template-columns: 88px minmax(0, 1fr);
-				border-radius: 20px;
+				border-radius: 10px;
 				padding: 10px;
 				gap: 10px;
 			}
@@ -501,8 +500,8 @@
 			el.className = "card";
 
 			const year = movie.year ? `<span class="year">(${escapeHtml(movie.year)})</span>` : "";
-			const runtime = movie.runtime ? `<div class="runtime">${escapeHtml(movie.runtime)}</div>` : "";
-			const genre = movie.genre ? `<div class="genre">${escapeHtml(movie.genre)}</div>` : "";
+			const metaParts = [movie.genre, movie.runtime].filter(Boolean).map(escapeHtml);
+			const metaLine = metaParts.length ? `<div class="meta-line">${metaParts.join(" | ")}</div>` : "";
 			const synopsis = movie.synopsis ? `<div class="synopsis">${escapeHtml(movie.synopsis)}</div>` : "";
 			const links = makeLinks(movie);
 
@@ -513,8 +512,8 @@
 						<h2 class="title">${escapeHtml(movie.title)}</h2>
 						${year}
 					</div>
-					${genre}
-					${runtime}
+					${metaLine}
+					${synopsis}
 					<div class="scoreboard">
 						<div class="score-block">
 							<span class="score-label">Critics</span>
@@ -525,7 +524,6 @@
 							<span class="score-value">${escapeHtml(scoreText(movie.audience))}</span>
 						</div>
 					</div>
-					${synopsis}
 					<div class="links">${links}</div>
 				</div>
 			`;
