@@ -54,12 +54,20 @@
 			padding: 14px 16px 12px;
 		}
 
+		.topbar.is-collapsed .topbar-inner {
+			padding-bottom: 10px;
+		}
+
 		.heading {
 			display: flex;
 			align-items: end;
 			justify-content: space-between;
 			gap: 16px;
 			margin-bottom: 12px;
+		}
+
+		.topbar.is-collapsed .heading {
+			margin-bottom: 0;
 		}
 
 		.heading h1 {
@@ -78,8 +86,61 @@
 			font-size: 0.84rem;
 		}
 
+		.header-main {
+			min-width: 0;
+		}
+
+		.header-summary {
+			display: none;
+			margin-top: 4px;
+			font-size: 0.84rem;
+			color: rgba(255, 255, 255, 0.88);
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.header-actions {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.header-toggle {
+			border: 1px solid rgba(255, 255, 255, 0.12);
+			background: rgba(255, 255, 255, 0.08);
+			color: #ffffff;
+			border-radius: 999px;
+			padding: 7px 12px;
+			font-size: 0.75rem;
+			line-height: 1;
+			cursor: pointer;
+		}
+
+		.header-toggle:hover,
+		.header-toggle:focus-visible {
+			border-color: rgba(14, 209, 170, 0.5);
+			outline: none;
+		}
+
 		.search-wrap {
 			position: relative;
+		}
+
+		.topbar-panel {
+			display: block;
+		}
+
+		.topbar.is-collapsed .topbar-panel {
+			display: none;
+		}
+
+		.topbar.is-collapsed .heading p {
+			display: none;
+		}
+
+		.topbar.is-collapsed .header-summary {
+			display: block;
 		}
 
 		.filters {
@@ -361,6 +422,11 @@
 				flex-direction: column;
 			}
 
+			.header-actions {
+				width: 100%;
+				justify-content: space-between;
+			}
+
 			.card {
 				grid-template-columns: 104px minmax(0, 1fr);
 				border-radius: 10px;
@@ -391,25 +457,31 @@
 	<header class="topbar">
 		<div class="topbar-inner">
 			<div class="heading">
-				<div>
+				<div class="header-main">
 					<h1>Movie Night</h1>
 					<p>Search by title, genre, year, runtime, or synopsis.</p>
+					<div class="header-summary" id="header-summary">Search by title, 0 movies</div>
 				</div>
-				<p class="status" id="status">Loading movies…</p>
+				<div class="header-actions">
+					<p class="status" id="status">Loading movies…</p>
+					<button class="header-toggle" id="header-toggle" type="button" aria-expanded="true">Collapse</button>
+				</div>
 			</div>
-			<div class="search-wrap">
-				<input id="q" class="search" type="search" placeholder="Search movies, genre, year…" autocomplete="off" />
-			</div>
-			<div class="filters">
-				<div class="filter-row" id="year-filters"></div>
-				<div class="filter-row" id="genre-filters"></div>
+			<div class="topbar-panel" id="topbar-panel">
+				<div class="search-wrap">
+					<input id="q" class="search" type="search" placeholder="Search movies, genre, year…" autocomplete="off" />
+				</div>
+				<div class="filters">
+					<div class="filter-row" id="year-filters"></div>
+					<div class="filter-row" id="genre-filters"></div>
+				</div>
 			</div>
 		</div>
 	</header>
 
 	<main class="shell">
 		<section id="grid" class="grid" aria-live="polite"></section>
-		<div class="version">v0.3.1</div>
+		<div class="version">v0.4.0</div>
 	</main>
 
 	<script>
@@ -449,6 +521,7 @@
 		];
 
 		let data = [];
+		let lastRenderedCount = 0;
 		const activeFilters = {
 			year: "",
 			genre: ""
@@ -729,7 +802,18 @@
 				}
 			}
 
-			document.getElementById("status").textContent = `${filtered.length} movie${filtered.length === 1 ? "" : "s"}`;
+			lastRenderedCount = filtered.length;
+			const countText = `${filtered.length} movie${filtered.length === 1 ? "" : "s"}`;
+			document.getElementById("status").textContent = countText;
+			document.getElementById("header-summary").textContent = `Search by title, ${countText}`;
+		}
+
+		function applyHeaderState(expanded) {
+			const topbar = document.querySelector(".topbar");
+			const toggle = document.getElementById("header-toggle");
+			topbar.classList.toggle("is-collapsed", !expanded);
+			toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+			toggle.textContent = expanded ? "Collapse" : "Expand";
 		}
 
 		async function loadCsvText() {
@@ -750,6 +834,7 @@
 		}
 
 		async function init() {
+			const mobileMedia = window.matchMedia("(max-width: 767px)");
 			const text = await loadCsvText();
 			const rows = parseCSV(text);
 			if (!rows.length) {
@@ -792,6 +877,20 @@
 				activeFilters[type] = value;
 				renderFilters();
 				render(document.getElementById("q").value);
+			});
+
+			const toggle = document.getElementById("header-toggle");
+			let headerExpanded = !mobileMedia.matches;
+			applyHeaderState(headerExpanded);
+
+			toggle.addEventListener("click", () => {
+				headerExpanded = !headerExpanded;
+				applyHeaderState(headerExpanded);
+			});
+
+			mobileMedia.addEventListener("change", (event) => {
+				headerExpanded = !event.matches;
+				applyHeaderState(headerExpanded);
 			});
 		}
 
