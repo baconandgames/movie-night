@@ -112,7 +112,7 @@
 
 		.card {
 			display: grid;
-			grid-template-columns: 102px minmax(0, 1fr);
+			grid-template-columns: 132px minmax(0, 1fr);
 			gap: 14px;
 			padding: 12px;
 			border: 1px solid var(--card-border);
@@ -134,7 +134,8 @@
 
 		.poster {
 			width: 100%;
-			aspect-ratio: 2 / 3;
+			height: 100%;
+			min-height: 248px;
 			border-radius: 10px;
 			overflow: hidden;
 			background: linear-gradient(180deg, rgba(220, 231, 240, 0.9) 0%, rgba(197, 211, 224, 0.95) 100%);
@@ -307,10 +308,14 @@
 			}
 
 			.card {
-				grid-template-columns: 88px minmax(0, 1fr);
+				grid-template-columns: 104px minmax(0, 1fr);
 				border-radius: 10px;
 				padding: 10px;
 				gap: 10px;
+			}
+
+			.poster {
+				min-height: 212px;
 			}
 
 			.scoreboard {
@@ -346,7 +351,7 @@
 
 	<main class="shell">
 		<section id="grid" class="grid" aria-live="polite"></section>
-		<div class="version">v0.2.2</div>
+		<div class="version">v0.2.3</div>
 	</main>
 
 	<script>
