@@ -82,6 +82,46 @@
 			position: relative;
 		}
 
+		.filters {
+			display: grid;
+			gap: 10px;
+			margin-top: 12px;
+		}
+
+		.filter-row {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			align-items: center;
+		}
+
+		.filter-label {
+			font-size: 0.72rem;
+			font-weight: 700;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			color: rgba(255, 255, 255, 0.72);
+			margin-right: 2px;
+		}
+
+		.chip {
+			border: 1px solid rgba(255, 255, 255, 0.12);
+			background: rgba(255, 255, 255, 0.08);
+			color: #ffffff;
+			border-radius: 999px;
+			padding: 7px 11px;
+			font-size: 0.76rem;
+			line-height: 1;
+			cursor: pointer;
+			transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+		}
+
+		.chip.is-active {
+			background: rgba(14, 209, 170, 0.18);
+			border-color: rgba(14, 209, 170, 0.5);
+			color: #dffff8;
+		}
+
 		.search {
 			width: 100%;
 			border: 1px solid rgba(12, 25, 44, 0.08);
@@ -360,12 +400,16 @@
 			<div class="search-wrap">
 				<input id="q" class="search" type="search" placeholder="Search movies, genre, year…" autocomplete="off" />
 			</div>
+			<div class="filters">
+				<div class="filter-row" id="year-filters"></div>
+				<div class="filter-row" id="genre-filters"></div>
+			</div>
 		</div>
 	</header>
 
 	<main class="shell">
 		<section id="grid" class="grid" aria-live="polite"></section>
-		<div class="version">v0.2.4</div>
+		<div class="version">v0.2.5</div>
 	</main>
 
 	<script>
@@ -375,6 +419,10 @@
 		const YT_LOGO = "./images/yt-logo.png";
 
 		let data = [];
+		const activeFilters = {
+			year: "",
+			genre: ""
+		};
 
 		function parseCSV(text) {
 			const rows = [];
@@ -488,6 +536,48 @@
 			return a.title.localeCompare(b.title);
 		}
 
+		function extractGenreTokens(value) {
+			return String(value || "")
+				.split(/[|/,]/)
+				.map((part) => part.trim())
+				.filter(Boolean);
+		}
+
+		function renderFilterRow(elementId, label, options, activeValue, type) {
+			const el = document.getElementById(elementId);
+			if (!el) {
+				return;
+			}
+
+			const chips = options.map((option) => {
+				const activeClass = option.value === activeValue ? " is-active" : "";
+				return `<button class="chip${activeClass}" type="button" data-filter-type="${type}" data-filter-value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</button>`;
+			}).join("");
+
+			el.innerHTML = `<span class="filter-label">${label}</span>${chips}`;
+		}
+
+		function renderFilters() {
+			const years = [...new Set(data.map((movie) => movie.year).filter(Boolean))]
+				.sort((a, b) => Number(b) - Number(a))
+				.map((year) => ({ label: year, value: year }));
+
+			const genreCounts = new Map();
+			for (const movie of data) {
+				for (const genre of extractGenreTokens(movie.genre)) {
+					genreCounts.set(genre, (genreCounts.get(genre) || 0) + 1);
+				}
+			}
+
+			const genres = [...genreCounts.entries()]
+				.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+				.slice(0, 8)
+				.map(([genre]) => ({ label: genre, value: genre }));
+
+			renderFilterRow("year-filters", "Year", [{ label: "All", value: "" }, ...years], activeFilters.year, "year");
+			renderFilterRow("genre-filters", "Genre", [{ label: "All", value: "" }, ...genres], activeFilters.genre, "genre");
+		}
+
 		function makePoster(movie) {
 			if (validHttpUrl(movie.poster)) {
 				return `
@@ -565,17 +655,18 @@
 		function render(filter = "") {
 			const grid = document.getElementById("grid");
 			const query = String(filter || "").trim().toLowerCase();
-			const filtered = query
-				? data.filter((movie) =>
-					[
-						movie.title,
-						movie.genre,
-						movie.year,
-						movie.runtime,
-						movie.synopsis
-					].some((value) => String(value || "").toLowerCase().includes(query))
-				)
-				: data;
+			const filtered = data.filter((movie) => {
+				const matchesQuery = !query || [
+					movie.title,
+					movie.genre,
+					movie.year,
+					movie.runtime,
+					movie.synopsis
+				].some((value) => String(value || "").toLowerCase().includes(query));
+				const matchesYear = !activeFilters.year || movie.year === activeFilters.year;
+				const matchesGenre = !activeFilters.genre || extractGenreTokens(movie.genre).includes(activeFilters.genre);
+				return matchesQuery && matchesYear && matchesGenre;
+			});
 
 			grid.innerHTML = "";
 
@@ -622,6 +713,7 @@
 				.filter((movie) => movie.title)
 				.sort(sortMovies);
 
+			renderFilters();
 			render();
 
 			document.getElementById("q").addEventListener("input", (event) => {
@@ -636,6 +728,19 @@
 
 				const expanded = synopsis.classList.toggle("is-expanded");
 				synopsis.setAttribute("aria-expanded", expanded ? "true" : "false");
+			});
+
+			document.querySelector(".filters").addEventListener("click", (event) => {
+				const chip = event.target.closest(".chip");
+				if (!chip) {
+					return;
+				}
+
+				const type = chip.getAttribute("data-filter-type");
+				const value = chip.getAttribute("data-filter-value") || "";
+				activeFilters[type] = value;
+				renderFilters();
+				render(document.getElementById("q").value);
 			});
 		}
 
