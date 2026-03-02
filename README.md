@@ -54,3 +54,6 @@ This repo is deployed with GitHub Pages from `main` at the repository root.
 ## Version Note
 
 The footer version on the page is the easiest way to confirm whether GitHub Pages has picked up the latest deploy.
+
+### Credits
+Favicon design by: <a href="https://www.flaticon.com/free-icons/popcorn" title="popcorn icons">Popcorn icons created by Mihimihi - Flaticon</a>
