@@ -335,9 +335,6 @@
 		}
 
 		.synopsis {
-			padding: 0;
-			border: 0;
-			background: transparent;
 			width: 100%;
 			text-align: left;
 			margin-top: 10px;
@@ -442,6 +439,10 @@
 				gap: 8px;
 			}
 
+			.synopsis {
+				-webkit-line-clamp: 5;
+			}
+
 			.score-block {
 				padding: 9px 10px;
 				min-height: 62px;
@@ -481,7 +482,7 @@
 
 	<main class="shell">
 		<section id="grid" class="grid" aria-live="polite"></section>
-		<div class="version">v0.4.0</div>
+		<div class="version">v0.4.1</div>
 	</main>
 
 	<script>
@@ -747,7 +748,7 @@
 			const year = movie.year ? `<span class="year">(${escapeHtml(movie.year)})</span>` : "";
 			const metaParts = [movie.genre, movie.runtime].filter(Boolean).map(escapeHtml);
 			const metaLine = metaParts.length ? `<div class="meta-line">${metaParts.join(" | ")}</div>` : "";
-			const synopsis = movie.synopsis ? `<button class="synopsis" type="button" aria-expanded="false" title="Toggle full synopsis">${escapeHtml(movie.synopsis)}</button>` : "";
+			const synopsis = movie.synopsis ? `<div class="synopsis" role="button" tabindex="0" aria-expanded="false" title="Toggle full synopsis">${escapeHtml(movie.synopsis)}</div>` : "";
 			const links = makeLinks(movie);
 
 			el.innerHTML = `
@@ -862,6 +863,21 @@
 					return;
 				}
 
+				const expanded = synopsis.classList.toggle("is-expanded");
+				synopsis.setAttribute("aria-expanded", expanded ? "true" : "false");
+			});
+
+			document.getElementById("grid").addEventListener("keydown", (event) => {
+				const synopsis = event.target.closest(".synopsis");
+				if (!synopsis) {
+					return;
+				}
+
+				if (event.key !== "Enter" && event.key !== " ") {
+					return;
+				}
+
+				event.preventDefault();
 				const expanded = synopsis.classList.toggle("is-expanded");
 				synopsis.setAttribute("aria-expanded", expanded ? "true" : "false");
 			});
