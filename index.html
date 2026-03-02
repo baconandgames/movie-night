@@ -44,8 +44,8 @@
 			top: 0;
 			z-index: 10;
 			backdrop-filter: blur(18px);
-			background: rgba(237, 243, 248, 0.8);
-			border-bottom: 1px solid rgba(12, 25, 44, 0.05);
+			background: #09182b;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 		}
 
 		.topbar-inner {
@@ -70,10 +70,11 @@
 			letter-spacing: -0.05em;
 		}
 
+		.heading h1,
 		.heading p,
 		.status {
 			margin: 0;
-			color: var(--muted);
+			color: #ffffff;
 			font-size: 0.84rem;
 		}
 
@@ -233,6 +234,11 @@
 		}
 
 		.synopsis {
+			padding: 0;
+			border: 0;
+			background: transparent;
+			width: 100%;
+			text-align: left;
 			margin-top: 10px;
 			color: #4f607a;
 			font-size: 0.8rem;
@@ -241,6 +247,14 @@
 			-webkit-line-clamp: 3;
 			-webkit-box-orient: vertical;
 			overflow: hidden;
+			cursor: pointer;
+			user-select: none;
+		}
+
+		.synopsis.is-expanded {
+			display: block;
+			-webkit-line-clamp: unset;
+			overflow: visible;
 		}
 
 		.links {
@@ -351,7 +365,7 @@
 
 	<main class="shell">
 		<section id="grid" class="grid" aria-live="polite"></section>
-		<div class="version">v0.2.3</div>
+		<div class="version">v0.2.4</div>
 	</main>
 
 	<script>
@@ -519,7 +533,7 @@
 			const year = movie.year ? `<span class="year">(${escapeHtml(movie.year)})</span>` : "";
 			const metaParts = [movie.genre, movie.runtime].filter(Boolean).map(escapeHtml);
 			const metaLine = metaParts.length ? `<div class="meta-line">${metaParts.join(" | ")}</div>` : "";
-			const synopsis = movie.synopsis ? `<div class="synopsis">${escapeHtml(movie.synopsis)}</div>` : "";
+			const synopsis = movie.synopsis ? `<button class="synopsis" type="button" aria-expanded="false" title="Toggle full synopsis">${escapeHtml(movie.synopsis)}</button>` : "";
 			const links = makeLinks(movie);
 
 			el.innerHTML = `
@@ -612,6 +626,16 @@
 
 			document.getElementById("q").addEventListener("input", (event) => {
 				render(event.target.value);
+			});
+
+			document.getElementById("grid").addEventListener("click", (event) => {
+				const synopsis = event.target.closest(".synopsis");
+				if (!synopsis) {
+					return;
+				}
+
+				const expanded = synopsis.classList.toggle("is-expanded");
+				synopsis.setAttribute("aria-expanded", expanded ? "true" : "false");
 			});
 		}
 
